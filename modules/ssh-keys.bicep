@@ -27,11 +27,13 @@ resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
                 ssh-keygen -q -m PEM -t rsa -b 4096 -N '' -f ./key
                 az keyvault secret set --name "ssh-private-key" --value "$(cat ./key)" --vault-name "''', '${resourcePrefix}akv${resourcePostfix}', '''"
                 az keyvault secret set --name "ssh-public-key" --value "$(cat ./key.pub)" --vault-name "''', '${resourcePrefix}akv${resourcePostfix}', '''"
-                rm ./key
-                rm ./key.pub
             fi
+
             sshPublicKey=$(cat ./key.pub)
             jq -n --arg sshPublicKey "$sshPublicKey" -c '{ SshPublicKey: $sshPublicKey }' > $AZ_SCRIPTS_OUTPUT_PATH
+
+            rm ./key
+            rm ./key.pub
         ''')
     }
 }

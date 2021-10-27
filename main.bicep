@@ -63,7 +63,9 @@ module iotEdgeDevice 'modules/iot-edge-device.bicep' = {
     version: version
   }
   dependsOn: [
+    keyVault
     iotHub
+    umi
   ]
 }
 
