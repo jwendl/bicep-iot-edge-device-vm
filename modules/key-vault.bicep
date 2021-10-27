@@ -2,6 +2,7 @@ param resourcePrefix string
 param resourcePostfix string
 param resourceGroupLocation string
 param currentUserObjectId string
+param userManagedIdentityObjectId string
 
 resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' = {
     name: '${resourcePrefix}akv${resourcePostfix}'
@@ -15,6 +16,18 @@ resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' = {
             {
                 tenantId: subscription().tenantId
                 objectId: currentUserObjectId
+
+                permissions: {
+                    secrets: [
+                        'list'
+                        'get'
+                        'set'
+                    ]
+                }
+            }
+            {
+                tenantId: subscription().tenantId
+                objectId: userManagedIdentityObjectId
 
                 permissions: {
                     secrets: [

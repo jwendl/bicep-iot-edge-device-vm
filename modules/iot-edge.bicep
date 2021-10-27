@@ -3,12 +3,10 @@ param resourcePostfix string
 param resourceGroupLocation string
 param version string
 param adminUsername string = 'adminuser'
+param userManagedIdentityAppId string
 
 @secure()
 param sshPublicKey string
-
-@secure()
-param iotHubConnectionString string
 
 resource bastion 'Microsoft.Network/bastionHosts@2021-03-01' = {
     name: '${resourcePrefix}abas${resourcePostfix}'
@@ -72,7 +70,7 @@ resource publicIpAddress 'Microsoft.Network/publicIPAddresses@2021-03-01' = {
         name: 'Standard'
     }
     properties: {
-        publicIPAllocationMethod: 'Dynamic'
+        publicIPAllocationMethod: 'Static'
         publicIPAddressVersion: 'IPv4'
         dnsSettings: {
             domainNameLabel: '${resourcePrefix}avm${resourcePostfix}'
@@ -91,9 +89,6 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2021-03-01' = {
             {
                 name: '${resourcePrefix}nic${resourcePostfix}'
                 properties: {
-                    publicIPAddress: {
-                        id: publicIpAddress.id
-                    }
                     subnet: {
                         id: virtualNetwork.properties.subnets[0].id
                     }
@@ -184,17 +179,24 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2021-07-01' = {
             forceUpdateTag: version
             protectedSettings: {
                 script: base64(concat('''
-                    curl https://packages.microsoft.com/config/ubuntu/20.04/multiarch/prod.list > ./microsoft-prod.list
+                    curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+                    az login --identity --username ''', '${userManagedIdentityAppId}', ''' --allow-no-subscriptions
+                    curl https://packages.microsoft.com/config/ubuntu/18.04/multiarch/prod.list > ./microsoft-prod.list
                     sudo cp ./microsoft-prod.list /etc/apt/sources.list.d/
+
                     curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
                     sudo cp ./microsoft.gpg /etc/apt/trusted.gpg.d/
                     sudo apt-get update
-                    sudo apt-get install moby-engine
+                    sudo apt-get install moby-engine --yes
+
                     curl -sSL https://raw.githubusercontent.com/moby/moby/master/contrib/check-config.sh -o check-config.sh
                     chmod +x check-config.sh
                     ./check-config.sh
-                    sudo apt-get install aziot-edge
-                    sudo iotedge config mp --connection-string ''', '${iotHubConnectionString}', '''
+
+                    deviceConnectionString=$(az keyvault secret show --vault-name ''', '${resourcePrefix}akv${resourcePostfix}', ''' --name device-connection-string)
+                    sudo iotedge config mp --connection-string "${deviceConnectionString}" --force
+                    sudo iotedge config apply -c '/etc/aziot/config.toml'
                 '''))
             }
         }

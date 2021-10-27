@@ -41,9 +41,8 @@ resourcePrefix=$ResourcePrefix
 resourcePostfix=$ResourcePostfix
 resourceGroupName=$ResourceGroupName
 resourceGroupLocation=$ResourceGroupLocation
+version=$(date | md5sum | awk '{print $1}')
 currentUserObjectId=$(az ad signed-in-user show --query objectId --output tsv)
 
 az group create --name $resourceGroupName --location $resourceGroupLocation
-az deployment group create --template-file ./main-key-vault.bicep --resource-group $resourceGroupName --parameters "resourcePrefix=${resourcePrefix}" --parameters "resourcePostfix=${resourcePostfix}" --parameters "resourceGroupLocation=${resourceGroupLocation}"  --parameters "currentUserObjectId=${currentUserObjectId}"
-az deployment group create --template-file ./main-requirements.bicep --resource-group $resourceGroupName --parameters "resourcePrefix=${resourcePrefix}" --parameters "resourcePostfix=${resourcePostfix}" --parameters "resourceGroupLocation=${resourceGroupLocation}"
-az deployment group create --template-file ./main-edge-vm.bicep --resource-group $resourceGroupName --parameters "resourcePrefix=${resourcePrefix}" --parameters "resourcePostfix=${resourcePostfix}" --parameters "resourceGroupLocation=${resourceGroupLocation}"
+az deployment group create --template-file ./main.bicep --resource-group $resourceGroupName --parameters "resourcePrefix=${resourcePrefix}" --parameters "resourcePostfix=${resourcePostfix}" --parameters "resourceGroupLocation=${resourceGroupLocation}"  --parameters "currentUserObjectId=${currentUserObjectId}" --parameters "version=${version}"
