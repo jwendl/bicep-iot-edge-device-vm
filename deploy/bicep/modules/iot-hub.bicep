@@ -144,25 +144,6 @@ resource iotHubEventHubEndpointConsumerGroup 'Microsoft.Devices/IotHubs/eventHub
     }
 }
 
-resource deviceAccount 'Microsoft.DeviceUpdate/accounts@2020-03-01-preview' = {
-    name: '${resourcePrefix}ada${resourcePostfix}'
-    location: resourceGroupLocation
-
-    resource deviceAccountInstance 'instances' = {
-        name: '${resourcePrefix}ada${resourcePostfix}'
-        location: resourceGroupLocation
-        properties: {
-            iotHubs: [
-                {
-                    resourceId: iotHub.id
-                    ioTHubConnectionString: 'HostName=${iotHub.properties.hostName};SharedAccessKeyName=${listKeys(iotHub.id, iotHub.apiVersion).value[5].keyName};SharedAccessKey=${listKeys(iotHub.id, iotHub.apiVersion).value[5].primaryKey}'
-                    eventHubConnectionString: 'Endpoint=${iotHub.properties.eventHubEndpoints.events.endpoint};SharedAccessKeyName=${listKeys(iotHub.id, iotHub.apiVersion).value[0].keyName};SharedAccessKey=${listKeys(iotHub.id, iotHub.apiVersion).value[0].primaryKey};EntityPath=${iotHub.properties.eventHubEndpoints.events.path}'
-                }
-            ]
-        }
-    }
-}
-
 resource iotHubConnectionStringSecret 'Microsoft.KeyVault/vaults/secrets@2021-06-01-preview' = {
     name: '${resourcePrefix}akv${resourcePostfix}/iot-hub-connection-string'
     properties: {

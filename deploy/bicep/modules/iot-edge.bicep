@@ -186,6 +186,8 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2021-07-01' = {
             forceUpdateTag: version
             protectedSettings: {
                 script: base64(concat('''
+                    export DEBIAN_FRONTEND="noninteractive"
+                    
                     sudo apt-get update
                     sudo apt-get install ca-certificates curl apt-transport-https lsb-release gnupg --yes
                     

@@ -13,8 +13,12 @@ resource umiTemplateRoleAssignment 'Microsoft.Authorization/roleAssignments@2020
     name: guid(umi.id)
     properties: {
         principalId: umi.properties.principalId
+        principalType: 'ServicePrincipal'
         roleDefinitionId: '/subscriptions/${subscription().subscriptionId}/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c'
     }
+    dependsOn: [
+        umi
+    ]
 }
 
 module keyVault 'modules/key-vault.bicep' = {
@@ -45,6 +49,9 @@ module sshKeys 'modules/ssh-keys.bicep' = {
         userManagaedIdentityResourceId: umi.id
         version: version
     }
+    dependsOn: [
+        keyVault
+    ]
 }
 
 module containerRegistry 'modules/container-registry.bicep' = {
@@ -64,6 +71,9 @@ module iotHub 'modules/iot-hub.bicep' = {
         resourceGroupLocation: resourceGroupLocation
         iotHubConsumerGroupName: 'events'
     }
+    dependsOn: [
+        keyVault
+    ]
 }
 
 module iotEdgeDevice 'modules/iot-edge-device.bicep' = {
@@ -76,6 +86,9 @@ module iotEdgeDevice 'modules/iot-edge-device.bicep' = {
         iotEdgeDeviceName: 'vm-edge-device'
         version: version
     }
+    dependsOn: [
+        keyVault
+    ]
 }
 
 module iotEdge 'modules/iot-edge.bicep' = {
@@ -89,4 +102,9 @@ module iotEdge 'modules/iot-edge.bicep' = {
         userManagaedIdentityResourceId: umi.id
         version: version
     }
+    dependsOn: [
+        keyVault
+        iotEdgeDevice
+        iotHub
+    ]
 }

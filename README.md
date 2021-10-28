@@ -3,7 +3,9 @@
 ## How to Run
 
 ``` bash
+pushd deploy/bicep
 ./deploy-azure.sh -p {resource-prefix} -s {resource-postfix} -g {resource-group-name} -l {resource-group-location}
+popd
 ```
 
 > The values for the above command can be found in the table below.
@@ -14,6 +16,62 @@
 | resource-postfix        | The postfix for your Azure resources                           | dev       |
 | resource-group-name     | The resource group you want to store your Azure resources      | TestGroup |
 | resource-group-location | The location that you want to put all the Azure resources into | westus2   |
+
+``` bash
+pushd deploy/build
+./build-image.sh -p {resource-prefix} -s {resource-postfix} 
+popd
+```
+
+| Variable         | Description                          | Example |
+| ---------------- | ------------------------------------ | ------- |
+| resource-prefix  | The prefix for your Azure resources  | jw      |
+| resource-postfix | The postfix for your Azure resources | dev     |
+
+Go into the src/DemoEdgeDevice/deployment.json file and modify the ``` registryCredentials ``` section to look like the below values.
+
+``` json
+            "registryCredentials": {
+              "PrivateRegistry": {
+                "username": "jwacrdev",
+                "password": "",
+                "address": "jwacrdev.azurecr.io"
+              }
+            }
+```
+
+| Variable | Description                             | Example             |
+| -------- | --------------------------------------- | ------------------- |
+| username | The username of your container registry | jwacrdev            |
+| password | The password of your container registry |                     |
+| address  | The address of your conmtainer registry | jwacrdev.azurecr.io |
+
+Change the section for ``` DemoEdgeModule ``` and update the image property.
+
+``` json
+          "DemoEdgeModule": {
+            "version": "1.0",
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+              "image": "jwacrdev.azurecr.io/demoedgemodule:latest",
+              "createOptions": "{}"
+            }
+```
+
+
+``` bash
+pushd deploy/edge
+./create-edge-module.sh -p {resource-prefix} -s {resource-postfix} -d {device-id}
+popd
+```
+
+| Variable         | Description                          | Example        |
+| ---------------- | ------------------------------------ | -------------- |
+| resource-prefix  | The prefix for your Azure resources  | jw             |
+| resource-postfix | The postfix for your Azure resources | dev            |
+| device-id        | The device name                      | vm-edge-device |
 
 ## Create Edge Device Manually
 
