@@ -1,5 +1,15 @@
 # An Example of Creating an IoT Edge VM with Bastion using Bicep
 
+The idea of this is to create a re-usable and re-deployable way to develop an IoT Edge module in a remote system without requiring a specific device. It creates an Azure Ubuntu 18.04 VM and installs the needed requirements to put IoT Edge on it.
+
+Resources used in this repository
+
+- Azure Bastion
+- Azure IoT Hub
+- Azure IoT Edge
+- Azure Key Vault
+- Azure Virtual Machines
+
 ## How to Run
 
 ``` bash
