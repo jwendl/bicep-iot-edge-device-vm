@@ -208,6 +208,9 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2021-07-01' = {
                     chmod +x check-config.sh
                     ./check-config.sh
 
+                    sudo apt-get update
+                    sudo apt-get install aziot-edge --yes
+
                     deviceConnectionString=$(az keyvault secret show --vault-name ''', '${resourcePrefix}akv${resourcePostfix}', ''' --name device-connection-string --query value --output tsv)
                     sudo iotedge config mp --connection-string "${deviceConnectionString}" --force
                     sudo iotedge config apply -c '/etc/aziot/config.toml'

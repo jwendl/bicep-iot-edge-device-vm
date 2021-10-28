@@ -31,6 +31,6 @@ resourcePostfix=$ResourcePostfix
 pushd ../../src/DemoEdgeDevice/modules/DemoEdgeModule
 
 az acr login --name "${resourcePrefix}acr${resourcePostfix}"
-az acr build -t demoedgemodule:v1 -r "${resourcePrefix}acr${resourcePostfix}" --file Dockerfile.amd64 .
+az acr build -t demoedgemodule:latest -r "${resourcePrefix}acr${resourcePostfix}" --file Dockerfile.amd64 .
 
 popd
