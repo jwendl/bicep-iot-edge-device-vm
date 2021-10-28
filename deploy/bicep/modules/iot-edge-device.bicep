@@ -23,6 +23,7 @@ resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
         scriptContent: concat('''
             az extension add --name azure-iot
             az iot hub device-identity create --resource-group ''', '${resourceGroup().name}',''' --device-id ''', '${iotEdgeDeviceName}', ''' --edge-enabled --hub-name ''', '${resourcePrefix}iot${resourcePostfix}', '''
+
             deviceConnectionString=$(az iot hub device-identity connection-string show --device-id ''', '${iotEdgeDeviceName}', ''' --hub-name ''', '${resourcePrefix}iot${resourcePostfix}', ''' --query connectionString --output tsv)
             jq -n --arg deviceConnectionString "$deviceConnectionString" -c '{ DeviceConnectionString: $deviceConnectionString }' > $AZ_SCRIPTS_OUTPUT_PATH
         ''')

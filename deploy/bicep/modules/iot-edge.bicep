@@ -4,6 +4,7 @@ param resourceGroupLocation string
 param version string
 param adminUsername string = 'adminuser'
 param userManagedIdentityAppId string
+param userManagaedIdentityResourceId string
 
 @secure()
 param sshPublicKey string
@@ -127,6 +128,12 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2021-03-01' = {
 resource virtualMachine 'Microsoft.Compute/virtualMachines@2021-07-01' = {
     name: '${resourcePrefix}avm${resourcePostfix}'
     location: resourceGroupLocation
+    identity: {
+        type: 'UserAssigned'
+        userAssignedIdentities: {
+            '${userManagaedIdentityResourceId}': {}
+        }
+    }
     properties: {
         hardwareProfile: {
             vmSize: 'Standard_D8s_v3'
@@ -179,13 +186,20 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2021-07-01' = {
             forceUpdateTag: version
             protectedSettings: {
                 script: base64(concat('''
-                    curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+                    sudo apt-get update
+                    sudo apt-get install ca-certificates curl apt-transport-https lsb-release gnupg --yes
+                    
+                    curl -sL https://packages.microsoft.com/keys/microsoft.asc | --dearmor | tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null
+                    AZ_REPO=$(lsb_release -cs)
+                    echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | tee /etc/apt/sources.list.d/azure-cli.list
+                    sudo apt-get update
+                    sudo apt-get install azure-cli --yes
 
                     az login --identity --username ''', '${userManagedIdentityAppId}', ''' --allow-no-subscriptions
-                    curl https://packages.microsoft.com/config/ubuntu/18.04/multiarch/prod.list > ./microsoft-prod.list
+                    curl -s https://packages.microsoft.com/config/ubuntu/18.04/multiarch/prod.list > ./microsoft-prod.list
                     sudo cp ./microsoft-prod.list /etc/apt/sources.list.d/
 
-                    curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
+                    curl -s https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
                     sudo cp ./microsoft.gpg /etc/apt/trusted.gpg.d/
                     sudo apt-get update
                     sudo apt-get install moby-engine --yes
@@ -194,7 +208,7 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2021-07-01' = {
                     chmod +x check-config.sh
                     ./check-config.sh
 
-                    deviceConnectionString=$(az keyvault secret show --vault-name ''', '${resourcePrefix}akv${resourcePostfix}', ''' --name device-connection-string)
+                    deviceConnectionString=$(az keyvault secret show --vault-name ''', '${resourcePrefix}akv${resourcePostfix}', ''' --name device-connection-string --query value --output tsv)
                     sudo iotedge config mp --connection-string "${deviceConnectionString}" --force
                     sudo iotedge config apply -c '/etc/aziot/config.toml'
                 '''))
